@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/sdk/database/dbplugin/v5"
 	"github.com/jayant07-yb/ysql-plugin"
-	"log"
-	"os"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 }
 
 func Run() error {
-	dbType, err := New()
+	dbType, err := ysql.New()
 	if err != nil {
 		return err
 	}
@@ -30,3 +31,9 @@ func Run() error {
 
 	return nil
 }
+
+
+
+
+
+
