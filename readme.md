@@ -59,7 +59,12 @@ $ vault write database/roles/my-first-role \
     default_ttl="1h" \
     max_ttl="24h"
 
+#   For managing the lease
+$   vault lease lookup database/creds/my-first-role/MML1XWMjcJKXBlk47HHs6HrZ
 
+$   vault lease renew  database/creds/my-first-role/MML1XWMjcJKXBlk47HHs6HrZ
+
+$   vault lease revoke   database/creds/my-first-role/yUqaWadOtpW0SfEe1JAelGLW
 
 ```
 
@@ -69,3 +74,7 @@ Create the user
 ```sh
 $   vault read database/creds/my-first-role
 ```
+
+
+##  Error with the revoke statement::
+-   `failed to revoke lease: lease_id=database/creds/my-first-role/MML1XWMjcJKXBlk47HHs6HrZ error="failed to revoke entry: resp: (*logical.Response)(nil) err: unable to delete user: rpc error: code = Internal desc = unable to delete user: pq: role \"V_TOKEN_MY-FIRST-ROLE_HDZVDJXNAEYNDNWVW2IU_1649353280\" cannot be dropped because some objects depend on it"`

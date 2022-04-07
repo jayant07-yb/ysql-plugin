@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/vault/api"
 	"github.com/hashicorp/vault/sdk/database/dbplugin/v5"
-	"github.com/jayant07-yb/ysql-plugin"
+	ysql "github.com/jayant07-yb/ysql-plugin"
 )
 
 func main() {
