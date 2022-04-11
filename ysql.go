@@ -57,6 +57,8 @@ func New() (interface{}, error) {
 
 	// This middleware isn't strictly required, but highly recommended to prevent accidentally exposing
 	// values such as passwords in error messages. An example of this is included below
+	// DatabaseErrorSanitizerMiddleware wraps an implementation of Databases and
+	// sanitizes returned error messages
 	dbType := dbplugin.NewDatabaseErrorSanitizerMiddleware(db, db.secretValues)
 	return dbType, nil
 }
