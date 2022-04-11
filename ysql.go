@@ -467,10 +467,6 @@ func (db *ysql) Type() (string, error) {
 	return yugabyteDBType, nil
 }
 
-func (db *ysql) Close() error {
-	panic("implement me")
-}
-
 func (db *ysql) getConnection(ctx context.Context) (*sql.DB, error) {
 	conn, err := db.Connection(ctx)
 	if err != nil {
