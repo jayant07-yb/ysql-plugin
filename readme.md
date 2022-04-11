@@ -1,10 +1,11 @@
 ##  Completion matrix
 |API/TASK|Status|
 |-|-|
-| Initialize the plugin| |
-| Create User | |
-| Delete User| |
-| Update User| |
+| Initialize the plugin|✅|
+| Create User |✅ |
+| Delete User|✅|
+| Update User|✅|
+| Formating and Documentation| |
 | Create User -test| |
 | Delete User -test| |
 | Update User -test| |
@@ -64,8 +65,7 @@ $   vault lease lookup database/creds/my-first-role/MML1XWMjcJKXBlk47HHs6HrZ
 
 $   vault lease renew  database/creds/my-first-role/MML1XWMjcJKXBlk47HHs6HrZ
 
-$   vault lease revoke   database/creds/my-first-role/yUqaWadOtpW0SfEe1JAelGLW
-
+$   vault lease revoke   database/creds/my-first-role/K4e0SuF9UZKzSazdW6OcpcMp
 ```
 
 
@@ -74,7 +74,8 @@ Create the user
 ```sh
 $   vault read database/creds/my-first-role
 ```
-
+docker  exec -it 7f0bbe99f83b  bash
 
 ##  Error with the revoke statement::
 -   `failed to revoke lease: lease_id=database/creds/my-first-role/MML1XWMjcJKXBlk47HHs6HrZ error="failed to revoke entry: resp: (*logical.Response)(nil) err: unable to delete user: rpc error: code = Internal desc = unable to delete user: pq: role \"V_TOKEN_MY-FIRST-ROLE_HDZVDJXNAEYNDNWVW2IU_1649353280\" cannot be dropped because some objects depend on it"`
+

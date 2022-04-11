@@ -176,18 +176,6 @@ func (ydb *ysql) NewUser(ctx context.Context, req dbplugin.NewUserRequest) (dbpl
 	return resp, nil
 }
 
-func removeEmpty(strs []string) []string {
-	newStrs := []string{}
-	for _, str := range strs {
-		str = strings.TrimSpace(str)
-		if str == "" {
-			continue
-		}
-		newStrs = append(newStrs, str)
-	}
-	return newStrs
-}
-
 func (ydb *ysql) UpdateUser(ctx context.Context, req dbplugin.UpdateUserRequest) (dbplugin.UpdateUserResponse, error) {
 	if req.Username == "" {
 		return dbplugin.UpdateUserResponse{}, fmt.Errorf("missing username")
@@ -313,47 +301,8 @@ func (ydb *ysql) changeUserExpiration(ctx context.Context, username string, chan
 func (ydb *ysql) DeleteUser(ctx context.Context, req dbplugin.DeleteUserRequest) (dbplugin.DeleteUserResponse, error) {
 	ydb.Lock()
 	defer ydb.Unlock()
-
-
-	if len(req.Statements.Commands) == 0 {
-		return dbplugin.DeleteUserResponse{}, ydb.defaultDeleteUser(ctx, req.Username)
-	}
-
-	return dbplugin.DeleteUserResponse{}, ydb.customDeleteUser(ctx, req.Username, req.Statements.Commands)
-}
-
-func (ydb *ysql) customDeleteUser(ctx context.Context, username string, revocationStmts []string) error {
-	db, err := ydb.getConnection(ctx)
-	if err != nil {
-		return err
-	}
-
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		tx.Rollback()
-	}()
-	fmt.Println("Revoke The User using costum setting")
-	for _, stmt := range revocationStmts {
-		for _, query := range strutil.ParseArbitraryStringSlice(stmt, ";") {
-			query = strings.TrimSpace(query)
-			if len(query) == 0 {
-				continue
-			}
-
-			m := map[string]string{
-				"name":     username,
-				"username": username,
-			}
-			if err := dbtxn.ExecuteTxQuery(ctx, tx, m, query); err != nil {
-				return err
-			}
-		}
-	}
-
-	return tx.Commit()
+	fmt.Println("Delete User for Default Settings are going to be called:: ")
+	return dbplugin.DeleteUserResponse{}, ydb.defaultDeleteUser(ctx, req.Username)
 }
 
 func (ydb *ysql) defaultDeleteUser(ctx context.Context, username string) error {
@@ -361,7 +310,6 @@ func (ydb *ysql) defaultDeleteUser(ctx context.Context, username string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Here")
 
 	// Check if the role exists
 	var exists bool
@@ -405,7 +353,7 @@ func (ydb *ysql) defaultDeleteUser(ctx context.Context, username string) error {
 			pq.QuoteIdentifier(username)))
 
 		revocationStmts = append(revocationStmts, fmt.Sprintf(
-			`REVOKE USAGE ON SCHEMA %s FROM %s;`,
+			`REVOKE ALL PRIVILEGES  ON SCHEMA %s FROM %s;`,
 			pq.QuoteIdentifier(schema),
 			pq.QuoteIdentifier(username)))
 	}
@@ -420,7 +368,7 @@ func (ydb *ysql) defaultDeleteUser(ctx context.Context, username string) error {
 		pq.QuoteIdentifier(username)))
 
 	revocationStmts = append(revocationStmts, fmt.Sprintf(
-		"REVOKE USAGE ON SCHEMA public FROM %s;",
+		"REVOKE ALL PRIVILEGES  ON SCHEMA public FROM %s;",
 		pq.QuoteIdentifier(username)))
 
 	// get the current database name so we can issue a REVOKE CONNECT for
@@ -432,17 +380,19 @@ func (ydb *ysql) defaultDeleteUser(ctx context.Context, username string) error {
 
 	if dbname.Valid {
 		revocationStmts = append(revocationStmts, fmt.Sprintf(
-			`REVOKE CONNECT ON DATABASE %s FROM %s;`,
+			`REVOKE ALL PRIVILEGES ON DATABASE %s FROM %s;`,
 			pq.QuoteIdentifier(dbname.String),
 			pq.QuoteIdentifier(username)))
 	}
+
+	revocationStmts = append(revocationStmts, fmt.Sprintf(
+		`REVOKE ALL PRIVILEGES  ON DATABASE yugabyte FROM %s;`,
+		pq.QuoteIdentifier(username)))
 
 	// again, here, we do not stop on error, as we want to remove as
 	// many permissions as possible right now
 	var lastStmtError error
 	for _, query := range revocationStmts {
-		fmt.Println("The execution query::")
-		fmt.Println(query)
 		if err := dbtxn.ExecuteDBQuery(ctx, db, nil, query); err != nil {
 			lastStmtError = err
 		}
@@ -462,7 +412,6 @@ func (ydb *ysql) defaultDeleteUser(ctx context.Context, username string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Reached Here")
 	defer stmt.Close()
 	if _, err := stmt.ExecContext(ctx); err != nil {
 		return err
