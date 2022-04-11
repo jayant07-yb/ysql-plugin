@@ -387,10 +387,6 @@ func (ydb *ysql) defaultDeleteUser(ctx context.Context, username string) error {
 			pq.QuoteIdentifier(username)))
 	}
 
-	revocationStmts = append(revocationStmts, fmt.Sprintf(
-		`REVOKE ALL PRIVILEGES  ON DATABASE yugabyte FROM %s;`,
-		pq.QuoteIdentifier(username)))
-
 	// again, here, we do not stop on error, as we want to remove as
 	// many permissions as possible right now
 	var lastStmtError error

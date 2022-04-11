@@ -17,18 +17,22 @@ import (
 
 // YugabyteConnectionProducer implements ConnectionProducer and provides a generic producer for most sql databases
 type YugabyteConnectionProducer struct {
-	Host     string `json:"host" mapstructure:"host" structs:"host"`
-	Username string `json:"username" mapstructure:"username" structs:"username"`
-	Password string `json:"password" mapstructure:"password" structs:"password"`
-	Port     int    `json:"port" mapstructure:"port" structs:"port"`
-	DbName   string `json:"db" mapstructure:"db" structs:"db"`
+	ConnectionURL            string      `json:"connection_url" mapstructure:"connection_url" structs:"connection_url"`
+	MaxOpenConnections       int         `json:"max_open_connections" mapstructure:"max_open_connections" structs:"max_open_connections"`
+	MaxIdleConnections       int         `json:"max_idle_connections" mapstructure:"max_idle_connections" structs:"max_idle_connections"`
+	MaxConnectionLifetimeRaw interface{} `json:"max_connection_lifetime" mapstructure:"max_connection_lifetime" structs:"max_connection_lifetime"`
+	Host                     string      `json:"host" mapstructure:"host" structs:"host"`
+	Username                 string      `json:"username" mapstructure:"username" structs:"username"`
+	Password                 string      `json:"password" mapstructure:"password" structs:"password"`
+	Port                     int         `json:"port" mapstructure:"port" structs:"port"`
+	DbName                   string      `json:"db" mapstructure:"db" structs:"db"`
 
+	Type                  string
 	RawConfig             map[string]interface{}
 	maxConnectionLifetime time.Duration
 	Initialized           bool
 	db                    *sql.DB
 	sync.Mutex
-	Type string
 }
 
 func (c *YugabyteConnectionProducer) Initialize(ctx context.Context, conf map[string]interface{}, verifyConnection bool) error {

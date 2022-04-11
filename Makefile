@@ -29,7 +29,6 @@ start-dev:
 enable:
 	vault secrets enable database
 
-write:
 	vault write database/config/yugabytedb \
     plugin_name=ysql-plugin  host="127.0.0.1" \
     port=5433 \

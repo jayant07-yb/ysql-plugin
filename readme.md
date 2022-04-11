@@ -65,7 +65,7 @@ $   vault lease lookup database/creds/my-first-role/MML1XWMjcJKXBlk47HHs6HrZ
 
 $   vault lease renew  database/creds/my-first-role/MML1XWMjcJKXBlk47HHs6HrZ
 
-$   vault lease revoke   database/creds/my-first-role/K4e0SuF9UZKzSazdW6OcpcMp
+$   vault lease revoke   database/creds/my-first-role/E8cCdoKTn9mvQjQAWd5aZohQ
 ```
 
 
