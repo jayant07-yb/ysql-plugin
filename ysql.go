@@ -303,8 +303,45 @@ func (ydb *ysql) changeUserExpiration(ctx context.Context, username string, chan
 func (ydb *ysql) DeleteUser(ctx context.Context, req dbplugin.DeleteUserRequest) (dbplugin.DeleteUserResponse, error) {
 	ydb.Lock()
 	defer ydb.Unlock()
-	fmt.Println("Delete User for Default Settings are going to be called:: ")
-	return dbplugin.DeleteUserResponse{}, ydb.defaultDeleteUser(ctx, req.Username)
+	if len(req.Statements.Commands) == 0 {
+		return dbplugin.DeleteUserResponse{}, ydb.defaultDeleteUser(ctx, req.Username)
+	}
+
+	return dbplugin.DeleteUserResponse{}, ydb.customDeleteUser(ctx, req.Username, req.Statements.Commands)
+}
+
+func (ydb *ysql) customDeleteUser(ctx context.Context, username string, revocationStmts []string) error {
+	db, err := ydb.getConnection(ctx)
+	if err != nil {
+		return err
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		tx.Rollback()
+	}()
+
+	for _, stmt := range revocationStmts {
+		for _, query := range strutil.ParseArbitraryStringSlice(stmt, ";") {
+			query = strings.TrimSpace(query)
+			if len(query) == 0 {
+				continue
+			}
+
+			m := map[string]string{
+				"name":     username,
+				"username": username,
+			}
+			if err := dbtxn.ExecuteTxQuery(ctx, tx, m, query); err != nil {
+				return err
+			}
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (ydb *ysql) defaultDeleteUser(ctx context.Context, username string) error {

@@ -20,21 +20,22 @@ import (
 func PrepareTestContainer(t *testing.T, version string) (func(), string) {
 
 	if version == "" {
-		version = "2"
+		version = "latest"
 	}
 	runner, err := docker.NewServiceRunner(docker.RunOptions{
-		ImageRepo: "yugabytedb/yugabyte",
-		ImageTag:  version,
-		Env:       []string{"POSTGRES_PASSWORD=secret", "POSTGRES_DB=database"},
-		Ports:     []string{"5433/tcp"},
+		ImageRepo:     "yugabytedb/yugabyte",
+		ContainerName: "yugabyte-vault-test",
+		ImageTag:      version,
+		Env:           []string{"POSTGRES_PASSWORD=secret", "POSTGRES_DB=database"},
+		Ports:         []string{"5433/tcp", "7000/tcp", "9000/tcp", "9042/tcp"},
 	})
 	if err != nil {
-		t.Fatalf("Could not start docker Postgres: %s", err)
+		t.Fatalf("Could not start docker Yugabyte: %s", err)
 	}
 
 	svc, err := runner.StartService(context.Background(), connectYsql)
 	if err != nil {
-		t.Fatalf("Could not start docker Postgres: %s", err)
+		t.Fatalf("Could not start docker Yugabyte: %s", err)
 	}
 
 	return svc.Cleanup, svc.Config.URL().String()
@@ -63,11 +64,12 @@ func connectYsql(ctx context.Context, host string, port int) (docker.ServiceConf
 }
 
 func getYsql(t *testing.T, options map[string]interface{}) (*ysql, func()) {
-	cleanup, connURL := PrepareTestContainer(t, "13.4-buster")
+	cleanup, connURL := PrepareTestContainer(t, "latest")
 
 	connectionDetails := map[string]interface{}{
 		"connection_url": connURL,
 	}
+	fmt.Printf("The link:: %s\n\n\n\n", connURL)
 	for k, v := range options {
 		connectionDetails[k] = v
 	}
